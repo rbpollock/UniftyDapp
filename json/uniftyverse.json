@@ -1,6 +1,6 @@
 {
-  "name": "Uniftyverse",
-  "description": "The Uniftyverse includes all bridged NFTs from alternative blockchains supported by Unifty.io.",
-  "image": "https://unifty.io/assets/img/unifty2.png",
-  "external_link": "https://unifty.io"
+    "name": "Uniftyverse",
+    "description": "The Uniftyverse includes all bridged NFTs from alternative blockchains supported by Unifty.io.",
+    "image": "https://127.0.0.1:8080/assets/img/wipp.png",
+    "external_link": "https://127.0.0.1:8080"
 }
