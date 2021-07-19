@@ -15,7 +15,7 @@ const rampClickListener = () => {
     console.log("Selected currency: ", currency);
     new rampInstantSdk.RampInstantSDK({
             hostAppName: "Unifty",
-            hostLogoUrl: "https://127.0.0.1:8080/assets/img/wipp.png",
+            hostLogoUrl: "http://127.0.0.1:8080/assets/img/wipp.png",
             swapAsset: currency,
             //url: 'https://ri-widget-staging.firebaseapp.com/', //remove this for the official release
             hostApiKey: 'qohqhya4v3he5d7k3pdcbuahek3apweoemv7m92h',

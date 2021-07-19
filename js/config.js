@@ -1,8 +1,8 @@
 // The name of the network/chain the dapps are supported to run on
-let network = 'Rinkeby';
+let network = 'Ethereum';
 
 // the chain id of the network as hex value without leading 0x
-let chain_id = '4';
+let chain_id = '1';
 
 // set to true to hide the sell button in the wallet.
 // useful if you want to use a custom marketplace and prevent confusion
@@ -19,7 +19,7 @@ let disable_royalties_button = false;
 // add more items of any collection you want to block
 let blocked_collections = [];
 
-switch(chain_id){
+switch (chain_id) {
     // xDai
     case '64':
         blocked_collections = [
@@ -28,7 +28,7 @@ switch(chain_id){
             "0x2a254f0179786a43c9b449CBe6aA2Dce77e1561D".toLowerCase() // Cold Truth Culture NFTs NSFW Collection
         ];
         break;
-    // Binance Smart Chain
+        // Binance Smart Chain
     case '38':
         blocked_collections = [
             "0x34F16273C250d30C9de5356f54c08C5E7f22de5d".toLowerCase(), // cumrocket
@@ -44,7 +44,7 @@ switch(chain_id){
             //"0x11F5780B54FCfF12fe791eafa34A60F770442d98".toLowerCase(), // anime token
             "0x48d76436F7596DDE45bDD384C375B71Cde3F0208".toLowerCase(), // oppai
             "0x306d4e3Add799686c48FF51DE01DC4f6F122EfF5".toLowerCase(), // appai 2
-            "0x59a713632989883b29D544B98Ef3D090A1Ea540B".toLowerCase(),  // rylieeeeb
+            "0x59a713632989883b29D544B98Ef3D090A1Ea540B".toLowerCase(), // rylieeeeb
             "0xDCe4d2AE85ef0E7db7923Cb0AA3307e8bF708BA7".toLowerCase(), // eden kain 3
             "0x339798Ab5b634f6EC3e733ade5d321685847aaa7".toLowerCase(), // eve
             "0x6ff76253235003970ee0224fa97F440166E1dC12".toLowerCase(), // crypto autistic portfolio
@@ -66,5 +66,5 @@ switch(chain_id){
             "0x374B2fb632d7F26cDdE7A1bFC138422C5C9E2148".toLowerCase() // skyhigh
         ];
         break;
-    // add further chain specific as desired...
+        // add further chain specific as desired...
 }

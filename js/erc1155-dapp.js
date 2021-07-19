@@ -16,29 +16,91 @@ function TncDapp() {
 
     this.prevChainId = '';
 
-    this.populateMyErc1155s = async function (){
+    this.displayCollectionCard = async function(erc1155, chain_id, _uri, i, explorer) {
 
-        /**
-         * NEW ACTION
-         */
+        console.log("CALLING FETCH URL: ", erc1155);
+        fetchUrl(api_url + '1.0/' + chain_id + '/collections/events/URI/erc1155Address/' + erc1155 + '/id/0', 5000);
 
-        _this.clearNewUpdateNft();
-        $('#nftNewModal').off('show.bs.modal');
-        $('#nftNewModal').on('show.bs.modal', this.newUpdateNft);
+        let data = await $.getJSON(_uri);
+        if (typeof data == 'object') {
 
-        if(_this.lastErc1155Index == -1) {
-            $('#myPoolsPage').html('');
-        }else{
-            $('#loadMore').remove();
+            let tmpl = _this.myPoolTemplate({
+                explorer: explorer,
+                image: data.image,
+                name: data.name,
+                description: data.description,
+                url: data.external_link,
+                erc1155: erc1155,
+                hasNfts: true,
+                index: i
+            });
+
+            $('#myPoolsPage').append(tmpl);
+
+            $('.btn-clipboard' + i).off('click');
+            $('.btn-clipboard' + i).on('click', function() {
+
+                $(this).tooltip('enable');
+                let _this2 = this;
+                setTimeout(function() {
+                    $(_this2).tooltip('show');
+                }, 100);
+                setTimeout(function() {
+                    $(_this2).tooltip('hide');
+                }, 3000);
+
+            });
+
+            $('.btn-clipboard' + i).off('mouseover');
+            $('.btn-clipboard' + i).on('mouseover', function() {
+
+                $(this).tooltip('disable');
+
+            });
+
+            $('.manageNftsButton' + i).off('click');
+            $('.manageNftsButton' + i).on('click', function() {
+                console.log('manage nft for contract', $(this).data('contractAddress'));
+                $('#nftErc1155Address').val($(this).data('contractAddress'));
+                $('#nftErc1155CurrName').val($(this).data('contractName'));
+                $('#view-collections').css('display', 'initial');
+                $('#new-nft').css('display', 'initial');
+
+                _this.loadPage('myNftsPage');
+            });
+
+            $('#view-collections').on('click', function() {
+                $('#myPoolsPage').css('display', 'grid');
+                $('#myNftsPage').css('display', 'none');
+                $('#view-collections').css('display', 'none');
+                $('#new-nft').css('display', 'none');
+
+            })
+
+            $(".popover-description").popover({
+                trigger: "manual",
+                html: true,
+                animation: false
+            }).on("mouseenter", function() {
+                var _this = this;
+                $(this).popover("show");
+                $(".popover").on("mouseleave", function() {
+                    $(_this).popover('hide');
+                });
+            }).on("mouseleave", function() {
+                var _this = this;
+                setTimeout(function() {
+                    if (!$(".popover:hover").length) {
+                        $(_this).popover("hide");
+                    }
+                }, 300);
+            });
         }
 
-        let length = await window.tncLib.getMyErc1155Length();
-
-        let offset = _this.lastErc1155Index > -1 ? _this.lastErc1155Index : length;
-        let currentIndex = offset;
-
+    }
+    this.getExplorer = function(chain_id) {
         let explorer = 'https://etherscan.io/address/';
-        switch(chain_id){
+        switch (chain_id) {
             case '4':
                 explorer = 'https://rinkeby.etherscan.io/address/';
                 break;
@@ -67,92 +129,44 @@ function TncDapp() {
                 explorer = 'https://explorer.matic.network/address/';
                 break;
         }
+        return explorer;
+    }
 
-        for(let i = offset - 1; i >= 0; i--){
+    this.populateMyErc1155s = async function() {
+
+        /**
+         * NEW ACTION
+         */
+
+        _this.clearNewUpdateNft();
+        $('#nftNewModal').off('show.bs.modal');
+        $('#nftNewModal').on('show.bs.modal', this.newUpdateNft);
+
+        if (_this.lastErc1155Index == -1) {
+            $('#myPoolsPage').html('');
+        } else {
+            $('#loadMore').remove();
+        }
+
+        let length = await window.tncLib.getMyErc1155Length();
+
+        let offset = _this.lastErc1155Index > -1 ? _this.lastErc1155Index : length;
+        let currentIndex = offset;
+        let explorer = this.getExplorer(chain_id);
+
+        let wippContractAddress = "0xD9c6E5E525bF60716351Cd316110Bd461389D94f";
+        let wippURI = "https://gateway.ipfs.io/ipfs/Qmbkr7Fw72CoqEAonF7A78pwMf4HBYUttmYeRrKTYSPZ4B";
+        this.displayCollectionCard(wippContractAddress, chain_id, wippURI, offset, explorer);
+        for (let i = offset - 1; i >= 0; i--) {
             currentIndex = i;
             let pool = await window.tncLib.getMyErc1155(i);
             let _uri = pool.contractURI;
 
             try {
+                this.displayCollectionCard(pool.erc1155, chain_id, _uri, i, explorer);
 
-                console.log("CALLING FETCH URL: ", pool.erc1155);
-                fetchUrl(api_url + '1.0/'+chain_id+'/collections/events/URI/erc1155Address/'+pool.erc1155+'/id/0', 5000);
 
-                let data = await $.getJSON(_uri);
-                if (typeof data == 'object') {
-
-                    let tmpl = _this.myPoolTemplate({
-                        explorer : explorer,
-                        image: data.image,
-                        name: data.name,
-                        description: data.description,
-                        url: data.external_link,
-                        erc1155: pool.erc1155,
-                        hasNfts: true,
-                        index: i
-                    });
-
-                    $('#myPoolsPage').append(tmpl);
-
-                    $('.btn-clipboard' + i).off('click');
-                    $('.btn-clipboard' + i).on('click', function () {
-
-                        $(this).tooltip('enable');
-                        let _this2 = this;
-                        setTimeout(function () {
-                            $(_this2).tooltip('show');
-                        }, 100);
-                        setTimeout(function () {
-                            $(_this2).tooltip('hide');
-                        }, 3000);
-
-                    });
-
-                    $('.btn-clipboard' + i).off('mouseover');
-                    $('.btn-clipboard' + i).on('mouseover', function () {
-
-                        $(this).tooltip('disable');
-
-                    });
-
-                    $('.manageNftsButton' + i).off('click');
-                    $('.manageNftsButton' + i).on('click', function () {
-                        console.log('manage nft for contract', $(this).data('contractAddress'));
-                        $('#nftErc1155Address').val($(this).data('contractAddress'));
-                        $('#nftErc1155CurrName').val($(this).data('contractName'));
-                        $('#view-collections').css('display', 'initial');
-
-                        _this.loadPage('myNftsPage');
-                    });
-
-                    $('#view-collections').on('click', function(){
-                        $('#myPoolsPage').css('display', 'grid');
-                        $('#myNftsPage').css('display', 'none');
-                        $('#view-collections').css('display', 'none');
-
-                    })
-
-                    $(".popover-description").popover({
-                        trigger: "manual",
-                        html: true,
-                        animation: false
-                    }).on("mouseenter", function() {
-                        var _this = this;
-                        $(this).popover("show");
-                        $(".popover").on("mouseleave", function() {
-                            $(_this).popover('hide');
-                        });
-                    }).on("mouseleave", function() {
-                        var _this = this;
-                        setTimeout(function() {
-                            if (!$(".popover:hover").length) {
-                                $(_this).popover("hide");
-                            }
-                        }, 300);
-                    });
-                }
-
-            }catch (e){
+            } catch (e) {
 
                 console.log('Trouble resolving collection uri: ', _uri);
             }
@@ -160,7 +174,7 @@ function TncDapp() {
             let maxPerLoad = 8;
             let currInvertedIndex = (length - 1) - i;
 
-            if( currInvertedIndex % maxPerLoad == maxPerLoad - 1 ){
+            if (currInvertedIndex % maxPerLoad == maxPerLoad - 1) {
 
                 _this.lastErc1155Index = i;
 
@@ -168,23 +182,23 @@ function TncDapp() {
             }
         }
 
-        if(currentIndex > 0){
+        if (currentIndex > 0) {
 
             $('#loadMore').remove();
             $('#myPoolsPage').append(_this.nextButtonTemplate({}));
             $('#loadMoreButton').off('click');
-            $('#loadMoreButton').on('click', function(){
+            $('#loadMoreButton').on('click', function() {
                 _this.populateMyErc1155s();
             });
         }
 
-        if( length == 0 ){
+        if (length == 0) {
 
             $('#myPoolsPage').html(_this.noPoolsTemplate({}));
         }
     };
 
-    this.populateMyNfts = async function(){
+    this.populateMyNfts = async function() {
 
         /**
          * EDIT ACTION
@@ -192,9 +206,9 @@ function TncDapp() {
         $('#nftNewModal').off('show.bs.modal');
         $('#nftNewModal').on('show.bs.modal', this.newUpdateNft);
 
-        if(_this.lastNftIndex == -1) {
+        if (_this.lastNftIndex == -1) {
             $('#myNftsPage').html('');
-        }else{
+        } else {
             $('#loadMore').remove();
         }
 
@@ -205,12 +219,12 @@ function TncDapp() {
         let offset = _this.lastNftIndex > -1 ? _this.lastNftIndex : 0;
         let currentIndex = offset;
 
-        if(offset <= 0) {
+        if (offset <= 0) {
             $('#myNftsPage').append('<div class="container-fluid" style="grid-column-start: 1; grid-column-end: -1;"><h1 id="nftContractNameTitle"></h1></div>');
             $('#nftContractNameTitle').text($('#nftErc1155CurrName').val());
         }
 
-        for(let i = offset; i < nfts.length; i++){
+        for (let i = offset; i < nfts.length; i++) {
 
             currentIndex = i;
 
@@ -222,20 +236,24 @@ function TncDapp() {
 
                 if (typeof data == 'object') {
 
-                    if(typeof data.animation_url == 'undefined'){
+                    if (typeof data.animation_url == 'undefined') {
                         data['animation_url'] = '';
                     }
 
-                    if(typeof data.audio_url == 'undefined'){
+                    if (typeof data.audio_url == 'undefined') {
                         data['audio_url'] = '';
                     }
 
-                    if(typeof data.interactive_url == 'undefined'){
+                    if (typeof data.interactive_url == 'undefined') {
                         data['interactive_url'] = '';
                     }
 
+                    if (typeof data.image_url == 'undefined') {
+                        data['image_url'] = (typeof data.image == 'undefined') ? '' : data.image;
+                    }
+
                     let tmpl = _this.myNftTemplate({
-                        image: data.image,
+                        image: data.image_url,
                         audio_url: data.audio_url,
                         animation_url: data.animation_url,
                         interactive_url: data.interactive_url,
@@ -271,19 +289,19 @@ function TncDapp() {
                         }, 300);
                     });
 
-                    if(chain_id == '1' || disable_royalties_button) {
+                    if (chain_id == '1' || disable_royalties_button) {
                         $('.marketRoyaltiesLink').css('display', 'none');
                     }
                 }
 
-            }catch (e){
+            } catch (e) {
 
                 console.log('Trouble resolving nft uri: ', nft);
             }
 
             let maxPerLoad = 8;
 
-            if( i % maxPerLoad == maxPerLoad - 1 ){
+            if (i % maxPerLoad == maxPerLoad - 1) {
 
                 _this.lastNftIndex = i + 1;
 
@@ -291,12 +309,12 @@ function TncDapp() {
             }
         }
 
-        if(currentIndex + 1 < nfts.length){
+        if (currentIndex + 1 < nfts.length) {
 
             $('#loadMore').remove();
             $('#myNftsPage').append(_this.nextButtonTemplate({}));
             $('#loadMoreButton').off('click');
-            $('#loadMoreButton').on('click', function(){
+            $('#loadMoreButton').on('click', function() {
                 _this.populateMyNfts();
             });
         }
@@ -306,13 +324,13 @@ function TncDapp() {
          */
 
         $('#nftBurnModal').off('show.bs.modal');
-        $('#nftBurnModal').on('show.bs.modal', function(e){
+        $('#nftBurnModal').on('show.bs.modal', function(e) {
 
-            $('#nftBurnNftId').val( $(e.relatedTarget).data('nftId') );
+            $('#nftBurnNftId').val($(e.relatedTarget).data('nftId'));
         });
 
         $('#nftBurnButton').off('click');
-        $('#nftBurnButton').on('click', function(){
+        $('#nftBurnButton').on('click', function() {
 
             toastr.remove();
 
@@ -320,15 +338,15 @@ function TncDapp() {
                 erc1155Address,
                 $('#nftBurnNftId').val(),
                 $('#nftBurnAmount').val(),
-                function (){
+                function() {
                     toastr["info"]('Please wait for the transaction to finish.', "Burning NFTs....");
                 },
-                function(receipt){
+                function(receipt) {
                     console.log(receipt);
                     toastr.remove();
                     toastr["success"]('Transaction has been finished.', "Success");
                 },
-                function(err){
+                function(err) {
                     toastr.remove();
                     let errMsg = 'An error occurred with your burn transaction.';
                     toastr["error"](errMsg, "Error");
@@ -340,13 +358,13 @@ function TncDapp() {
          * MINT ACTION
          */
         $('#nftMintModal').off('show.bs.modal');
-        $('#nftMintModal').on('show.bs.modal', function(e){
+        $('#nftMintModal').on('show.bs.modal', function(e) {
 
-            $('#nftMintNftId').val( $(e.relatedTarget).data('nftId') );
+            $('#nftMintNftId').val($(e.relatedTarget).data('nftId'));
         });
 
         $('#nftMintButton').off('click');
-        $('#nftMintButton').on('click', function(){
+        $('#nftMintButton').on('click', function() {
 
             toastr.remove();
 
@@ -354,15 +372,15 @@ function TncDapp() {
                 erc1155Address,
                 $('#nftMintNftId').val(),
                 $('#nftMintAmount').val(),
-                function (){
+                function() {
                     toastr["info"]('Please wait for the transaction to finish.', "Minting NFTs....");
                 },
-                function(receipt){
+                function(receipt) {
                     console.log(receipt);
                     toastr.remove();
                     toastr["success"]('Transaction has been finished.', "Success");
                 },
-                function(err){
+                function(err) {
                     toastr.remove();
                     let errMsg = 'An error occurred with your mint transaction.';
                     toastr["error"](errMsg, "Error");
@@ -375,7 +393,7 @@ function TncDapp() {
          */
 
         $('#nftTransferButton').off('click');
-        $('#nftTransferButton').on('click', function(){
+        $('#nftTransferButton').on('click', function() {
 
             toastr.remove();
 
@@ -384,15 +402,15 @@ function TncDapp() {
                 $('#nftTransferNftId').val(),
                 $('#nftTransferAmount').val(),
                 $('#nftTransferToAddress').val().trim(),
-                function (){
+                function() {
                     toastr["info"]('Please wait for the transaction to finish.', "Transferring NFTs....");
                 },
-                function(receipt){
+                function(receipt) {
                     console.log(receipt);
                     toastr.remove();
                     toastr["success"]('Transaction has been finished.', "Success");
                 },
-                function(err){
+                function(err) {
                     toastr.remove();
                     let errMsg = 'An error occurred with your transfer transaction.';
                     toastr["error"](errMsg, "Error");
@@ -401,12 +419,12 @@ function TncDapp() {
         });
     };
 
-    this.clearNewUpdateNft = function(){
+    this.clearNewUpdateNft = function() {
 
         $("#nftForm")[0].reset();
         $("#addedAttributes").html('');
-        $('#nftSupplyGroup').css('display', 'block');
-        $('#nftMaxSupplyGroup').css('display', 'block');
+        $('#nftSupplyGroup').css('display', 'inline-block');
+        $('#nftMaxSupplyGroup').css('display', 'inline-block');
         $('#nftIsEdit').val(0);
         $('#nftNewModalLabel').html('New NFT');
         $('#nftSubmit').html('Create NFT');
@@ -421,7 +439,7 @@ function TncDapp() {
         $('.submitNewUpdate').prop('disabled', false);
     };
 
-    this.clearNewUpdateCollection = function(){
+    this.clearNewUpdateCollection = function() {
 
         $("#contractForm")[0].reset();
         $('#collectionUpdateAddress').val('');
@@ -435,19 +453,23 @@ function TncDapp() {
         $('.submitNewUpdate').prop('disabled', false);
     };
 
-    this.newUpdateCollection = async function(e){
+    this.generateInteractiveHtml = function() {
+        var pannellum3d = `<html><body></body></html>`;
+    }
+
+    this.newUpdateCollection = async function(e) {
 
         _this.clearNewUpdateCollection();
 
         $('.currency').html(getCurrency());
 
-        let fee = await web3.utils.fromWei(await window.tncLib.getPoolFee()+"");
+        let fee = await web3.utils.fromWei(await window.tncLib.getPoolFee() + "");
         let nif = await web3.utils.fromWei(await window.tncLib.getPoolMinimumNif());
 
         $('#nifMinCollection').html(nif);
         $('#ethFeeCollection').html(fee);
 
-        if( $(e.relatedTarget).data('edit') ){
+        if ($(e.relatedTarget).data('edit')) {
 
             $('#feeCollection').css('display', 'none');
             $('#collectionTicker').css('display', 'none');
@@ -455,7 +477,7 @@ function TncDapp() {
 
             let contractMeta = await window.tncLib.getErc1155Meta($(e.relatedTarget).data('contractAddress'));
 
-            try{
+            try {
 
                 let data = await $.getJSON(contractMeta.contractURI);
 
@@ -465,33 +487,32 @@ function TncDapp() {
 
                     $('#nftContractModalLabel').html('Edit Collection');
                     $('#erc1155Submit').html('Update Collection');
-                    $('#erc1155Description').val( data.description );
-                    $('#erc1155ExternalUrl').val( data.external_link );
-                    $('#erc1155ImageUrl').val( data.image );
-                    if(data.image.trim() != "") {
+                    $('#erc1155Description').val(data.description);
+                    $('#erc1155ExternalUrl').val(data.external_link);
+                    $('#erc1155ImageUrl').val(data.image_url);
+                    if (data.image_url.trim() != "") {
                         $('.imageFileDisplay').html('<img src=' + JSON.stringify(data.image) + ' border="0" width="200"/>');
                     }
-                    $('#erc1155Name').val( data.name );
-                }
-                else{
+                    $('#erc1155Name').val(data.name);
+                } else {
 
                     _alert('Contract meta not valid: ' + contractMeta.contractURI);
                 }
 
-            }catch(e){
+            } catch (e) {
 
                 _alert('Trouble resolving contract uri: ' + contractMeta.contractURI);
             }
 
-            $('#collectionUpdateAddress').val( $(e.relatedTarget).data('contractAddress') );
+            $('#collectionUpdateAddress').val($(e.relatedTarget).data('contractAddress'));
         }
     };
 
-    this.newUpdateNft = async function(e){
+    this.newUpdateNft = async function(e) {
 
         _this.clearNewUpdateNft();
 
-        if( $(e.relatedTarget).data('edit') ){
+        if ($(e.relatedTarget).data('edit')) {
 
             $('#nftSupplyGroup').css('display', 'none');
             $('#nftMaxSupplyGroup').css('display', 'none');
@@ -509,73 +530,70 @@ function TncDapp() {
 
                     console.log('edit action for data: ', data);
 
-                    if(typeof data.animation_url == 'undefined'){
+                    if (typeof data.animation_url == 'undefined') {
                         data['animation_url'] = '';
                     }
 
-                    if(typeof data.audio_url == 'undefined'){
+                    if (typeof data.audio_url == 'undefined') {
                         data['audio_url'] = '';
                     }
 
-                    if(typeof data.interactive_url == 'undefined'){
+                    if (typeof data.interactive_url == 'undefined') {
                         data['interactive_url'] = '';
-                    }
-                    else
-                    {
+                    } else {
                         data.interactive_url = data.interactive_url;
+                    }
+                    if ((typeof data.image_url == 'undefined') && (typeof data.image != 'undefined')) {
+                        data['image_url'] = data.image;
                     }
 
                     $('#nftNewModalLabel').html('Edit NFT');
                     $('.submitNewUpdate').html('Update NFT');
 
-                    $('#nftDescription').val( data.description );
-                    $('#nftExternalUrl').val( data.external_link );
-                    $('#nftImageUrl').val( data.image );
-                    $('#nftVideoUrl').val( data.animation_url );
-                    $('#nftAudioUrl').val( data.audio_url );
-                    $('#nftInteractiveUrl').val( data.interactive_url );
-                    if(data.image.trim() != "") {
-                        $('.imageFileDisplay').html('<img src=' + JSON.stringify(data.image) + ' border="0" width="200"/>');
+                    $('#nftDescription').val(data.description);
+                    $('#nftExternalUrl').val(data.external_link);
+                    $('#nftImageUrl').val(data.image_url);
+                    $('#nftVideoUrl').val(data.animation_url);
+                    $('#nftAudioUrl').val(data.audio_url);
+                    $('#nftInteractiveUrl').val(data.interactive_url);
+                    if (data.image_url.trim() != "") {
+                        $('.imageFileDisplay').html('<img src=' + JSON.stringify(data.image_url) + ' border="0" width="200"/>');
                     }
-                    if(data.animation_url.trim() != "") {
-                        let tag = '<video autoplay="autoplay" preload="auto" muted="muted" poster=' + JSON.stringify(data.image) + ' loop="loop" width="400" controls="controls">\n' +
-                            '  <source src='+JSON.stringify(data.animation_url)+' type="video/mp4">\n' +
-                            '  Videos are not supported by your browser\n' +
-                            '</video>';
+                    if (data.animation_url.trim() != "") {
+                        let tag = '<iframe style="width:100%;height:400px;" src=' + JSON.stringify(data.animation_url) + ' sandbox="allow-scripts allow-pointer-lock allow-popups allow-forms"></iframe>\n';
                         $('.videoFileDisplay').html(tag);
                     }
-                    if(data.audio_url.trim() != "") {
+                    if (data.audio_url.trim() != "") {
                         let tag = '<audio controls="controls" preload="auto" loop="loop">\n' +
                             '  <source src=' + JSON.stringify(data.audio_url) + ' type="audio/mp3">\n' +
                             '  Your browser does not support audio.\n' +
                             '</audio>';
                         $('.audioFileDisplay').html(tag);
                     }
-                    if(data.interactive_url.trim() != "") {
+                    if (data.interactive_url.trim() != "") {
                         let tag = '<iframe style="width:100%;height:400px;" src=' + JSON.stringify(data.interactive_url.trim()) + ' sandbox="allow-scripts allow-pointer-lock allow-popups allow-forms"></iframe>';
                         $('.interactiveFileDisplay').html(tag);
                     }
 
-                    $('#nftName').val( data.name );
+                    $('#nftName').val(data.name);
 
-                    for(let i = 0; i < data.attributes.length; i++){
+                    for (let i = 0; i < data.attributes.length; i++) {
 
-                        $('#addAttributeKey').val( data.attributes[i].trait_type );
-                        $('#addAttributeValue').val( data.attributes[i].value );
-                        if(typeof data.attributes[i].display_type != 'undefined') {
+                        $('#addAttributeKey').val(data.attributes[i].trait_type);
+                        $('#addAttributeValue').val(data.attributes[i].value);
+                        if (typeof data.attributes[i].display_type != 'undefined') {
                             $('#addDisplayType').val(data.attributes[i].display_type);
-                        }else{
+                        } else {
                             $('#addDisplayType').val('text');
                         }
                         $('#addAttributeButton').click();
                     }
-                }
-                else{
+                } else {
 
                     _alert('NFT not a valid json object: ' + nft.uri);
                 }
 
-            }catch (e){
+            } catch (e) {
 
                 console.log(e.message);
                 _alert('Trouble resolving nft uri: ' + nft.uri);
@@ -583,58 +601,57 @@ function TncDapp() {
         }
 
         console.log('new/edit nft for contract: ', $(e.relatedTarget).data('contractAddress'));
-        $('#nftErc1155Address').val( $(e.relatedTarget).data('contractAddress') );
+        $('#nftErc1155Address').val($(e.relatedTarget).data('contractAddress'));
     };
 
-    this.processTransferMultiBatch = async function(){
+    this.processTransferMultiBatch = async function() {
 
-        let recipients = $('#nftTransferMultiBatchToAddresses').val().replace("\r","").split("\n");
+        let recipients = $('#nftTransferMultiBatchToAddresses').val().replace("\r", "").split("\n");
         let collection = $('#nftTransferMultiBatchCollection').val().trim();
-        let ids = $('#nftTransferMultiBatchIds').val().replace("\r","").split("\n");
-        let amounts = $('#nftTransferMultiBatchAmounts').val().replace("\r","").split("\n");
+        let ids = $('#nftTransferMultiBatchIds').val().replace("\r", "").split("\n");
+        let amounts = $('#nftTransferMultiBatchAmounts').val().replace("\r", "").split("\n");
 
-        if(!web3.utils.isAddress(collection)){
+        if (!web3.utils.isAddress(collection)) {
             _alert('Given collection is not a valid address.');
             return;
         }
 
-        if(!await tncLib.isErc1155Supported(collection)){
+        if (!await tncLib.isErc1155Supported(collection)) {
             _alert('Given address is not a valid collection contract.');
             return;
         }
 
-        if(recipients.length == 0){
+        if (recipients.length == 0) {
             _alert('Please add recipient addresses.');
             return;
         }
 
         let wrong_recipients = '';
-        for(let i = 0; i < recipients.length; i++){
+        for (let i = 0; i < recipients.length; i++) {
 
-            if(!web3.utils.isAddress(recipients[i])){
+            if (!web3.utils.isAddress(recipients[i])) {
                 wrong_recipients += recipients[i] + '<br/>';
             }
         }
 
-        if(wrong_recipients != ''){
+        if (wrong_recipients != '') {
             _alert('The following addresses are invalid:<br/><br/>' + wrong_recipients);
             return;
         }
 
-        if(ids.length != amounts.length){
+        if (ids.length != amounts.length) {
             _alert('There must be as many NFT IDs as there are amounts.');
             return;
         }
 
-        for(let i = 0; i < recipients.length; i++){
+        for (let i = 0; i < recipients.length; i++) {
 
             recipients[i] = recipients[i].trim();
         }
 
         let approved = await tncLib.erc1155IsApprovedForAll(tncLib.account, tncLib.multiBatch.options.address, collection);
 
-        if(!approved)
-        {
+        if (!approved) {
 
             $('#nftTransferMultiBatchButton').prop('disabled', true);
             $('#nftTransferMultiBatchButton').html('Approve first...');
@@ -645,17 +662,17 @@ function TncDapp() {
                 tncLib.multiBatch.options.address,
                 true,
                 collection,
-                function () {
+                function() {
                     toastr["info"]('Please wait for the transaction to finish.', "Set approval for all....");
                 },
-                function (receipt) {
+                function(receipt) {
                     console.log(receipt);
                     toastr.remove();
                     $('#nftTransferMultiBatchButton').prop('disabled', false);
                     $('#nftTransferMultiBatchButton').html('Approved! Transfer Now');
                     toastr["success"]('Transaction has been finished.', "Success");
                 },
-                function (err) {
+                function(err) {
                     toastr.remove();
                     $('#nftTransferMultiBatchButton').prop('disabled', false);
                     $('#nftTransferMultiBatchButton').html('Transfer');
@@ -664,9 +681,7 @@ function TncDapp() {
                     errorPopup("Error", errMsg, err.stack);
                 }
             );
-        }
-        else
-        {
+        } else {
 
             toastr.remove();
             $('#nftTransferMultiBatchButton').html('Pending Transaction...');
@@ -677,17 +692,17 @@ function TncDapp() {
                 recipients,
                 ids,
                 amounts,
-                function (){
+                function() {
                     toastr["info"]('Please wait for the transaction to finish.', "Transferring NFTs....");
                 },
-                function(receipt){
+                function(receipt) {
                     console.log(receipt);
                     toastr.remove();
                     $('#nftTransferMultiBatchButton').html('Transfer');
                     $('#nftTransferMultiBatchButton').prop('disabled', false);
                     toastr["success"]('Transaction has been finished.', "Success");
                 },
-                function(err){
+                function(err) {
                     toastr.remove();
                     $('#nftTransferMultiBatchButton').prop('disabled', false);
                     $('#nftTransferMultiBatchButton').html('Transfer');
@@ -698,18 +713,18 @@ function TncDapp() {
         }
     }
 
-    this.performRoyalties = async function(){
+    this.performRoyalties = async function() {
 
         let perc = parseFloat($('#nftRoyalties').val().trim());
 
-        if(isNaN(perc) || perc < 0){
+        if (isNaN(perc) || perc < 0) {
 
             _alert('Invalid royalties');
             return;
 
         }
 
-        perc = _this.resolveNumberString(""+(perc.toFixed(2)), 2);
+        perc = _this.resolveNumberString("" + (perc.toFixed(2)), 2);
 
         toastr.remove();
         $('#storeRoyaltiesButton').html('Pending Transaction...');
@@ -719,17 +734,17 @@ function TncDapp() {
             $('#nftRoyaltiesErc1155Address').val(),
             $('#nftRoyaltiesId').val(),
             perc,
-            function (){
+            function() {
                 toastr["info"]('Please wait for the transaction to finish.', "Setting royalties....");
             },
-            function(receipt){
+            function(receipt) {
                 console.log(receipt);
                 toastr.remove();
                 $('#storeRoyaltiesButton').html('Set Royalties');
                 $('#storeRoyaltiesButton').prop('disabled', false);
                 toastr["success"]('Transaction has been finished.', "Success");
             },
-            function(err){
+            function(err) {
                 toastr.remove();
                 $('#storeRoyaltiesButton').prop('disabled', false);
                 $('#storeRoyaltiesButton').html('Set Royalties');
@@ -739,43 +754,43 @@ function TncDapp() {
             });
     }
 
-    this.populateRoyalties = async function(e){
+    this.populateRoyalties = async function(e) {
 
-        $('#nftRoyaltiesErc1155Address').val( $(e.relatedTarget).data('contractAddress') );
-        $('#nftRoyaltiesId').val( $(e.relatedTarget).data('nftId') );
+        $('#nftRoyaltiesErc1155Address').val($(e.relatedTarget).data('contractAddress'));
+        $('#nftRoyaltiesId').val($(e.relatedTarget).data('nftId'));
 
         $('#nftRoyalties').val(_this.formatNumberString(await tncLibMarket.getRoyalties($(e.relatedTarget).data('contractAddress'), $(e.relatedTarget).data('nftId')), 2));
     }
 
-    this.formatNumberString = function (string, decimals) {
+    this.formatNumberString = function(string, decimals) {
 
         let pos = string.length - decimals;
 
-        if(decimals == 0) {
+        if (decimals == 0) {
             // nothing
-        }else
-        if(pos > 0){
+        } else
+        if (pos > 0) {
             string = string.substring(0, pos) + "." + string.substring(pos, string.length);
-        }else{
-            string = '0.' + ( "0".repeat( decimals - string.length ) ) + string;
+        } else {
+            string = '0.' + ("0".repeat(decimals - string.length)) + string;
         }
 
         return string
     };
 
-    this.resolveNumberString = function(number, decimals){
+    this.resolveNumberString = function(number, decimals) {
 
         let splitted = number.split(".");
-        if(splitted.length == 1 && decimals > 0){
+        if (splitted.length == 1 && decimals > 0) {
             splitted[1] = '';
         }
-        if(splitted.length > 1) {
+        if (splitted.length > 1) {
             let size = decimals - splitted[1].length;
             for (let i = 0; i < size; i++) {
                 splitted[1] += "0";
             }
             number = "" + (splitted[0] == 0 ? '' : splitted[0]) + splitted[1];
-            if(parseInt(number) == 0){
+            if (parseInt(number) == 0) {
                 number = "0";
             }
         }
@@ -783,12 +798,12 @@ function TncDapp() {
         return number;
     };
 
-    this.loadPage = async function (page){
+    this.loadPage = async function(page) {
 
         $('#myPoolsPage').css('display', 'none');
         $('#myNftsPage').css('display', 'none');
 
-        switch (page){
+        switch (page) {
 
             case 'myNftsPage':
 
@@ -799,15 +814,15 @@ function TncDapp() {
                 $('#royaltiesModal').on('show.bs.modal', _this.populateRoyalties);
 
                 $('#nftTransferModal').off('show.bs.modal');
-                $('#nftTransferModal').on('show.bs.modal', function(e){
+                $('#nftTransferModal').on('show.bs.modal', function(e) {
 
-                    $('#nftTransferNftId').val( $(e.relatedTarget).data('nftId') );
+                    $('#nftTransferNftId').val($(e.relatedTarget).data('nftId'));
                 });
 
                 this.lastNftIndex = -1;
 
                 $('#myNftsPage').css({
-                    'display': 'grid', 
+                    'display': 'grid',
                     'grid-template-columns': 'repeat(auto-fill, minmax(25rem, 1fr)',
                     'grid-gap': '2rem'
                 });
@@ -834,14 +849,14 @@ function TncDapp() {
         }
     }
 
-    this.storeIpfsImage = function(fileElement, urlStorageElement){
+    this.storeIpfsImage = function(fileElement, urlStorageElement) {
 
         $('.submitNewUpdate').prop('disabled', true);
         let tmp = $('.submitNewUpdate:visible').html();
         $('.submitNewUpdate').html('Uploading Image...');
 
         let reader = new FileReader();
-        reader.onloadend = function () {
+        reader.onloadend = function() {
 
             const buf = buffer.Buffer(reader.result);
 
@@ -864,14 +879,14 @@ function TncDapp() {
         }
     };
 
-    this.storeIpfsVideo = function(fileElement, urlStorageElement){
+    this.storeIpfsVideo = function(fileElement, urlStorageElement) {
 
         $('.submitNewUpdate').prop('disabled', true);
         let tmp = $('.submitNewUpdate:visible').html();
         $('.submitNewUpdate').html('Uploading Video...');
 
         let reader = new FileReader();
-        reader.onloadend = function () {
+        reader.onloadend = function() {
 
             const buf = buffer.Buffer(reader.result);
 
@@ -883,7 +898,7 @@ function TncDapp() {
                 $(urlStorageElement).val(ipfsLink);
 
                 let tag = '<video autoplay="autoplay" preload="auto" muted="muted" loop="loop" width="400" controls="controls">\n' +
-                    '  <source src='+JSON.stringify(ipfsLink)+' type="video/mp4">\n' +
+                    '  <source src=' + JSON.stringify(ipfsLink) + ' type="video/mp4">\n' +
                     '  Videos are not supported by your browser\n' +
                     '</video>';
                 $('.videoFileDisplay').html(tag);
@@ -900,14 +915,14 @@ function TncDapp() {
         }
     };
 
-    this.storeIpfsAudio = function(fileElement, urlStorageElement){
+    this.storeIpfsAudio = function(fileElement, urlStorageElement) {
 
         $('.submitNewUpdate').prop('disabled', true);
         let tmp = $('.submitNewUpdate:visible').html();
         $('.submitNewUpdate').html('Uploading Audio File...');
 
         let reader = new FileReader();
-        reader.onloadend = function () {
+        reader.onloadend = function() {
 
             const buf = buffer.Buffer(reader.result);
 
@@ -936,14 +951,36 @@ function TncDapp() {
         }
     };
 
-    this.storeIpfsInteractive = function(fileElement, urlStorageElement){
+    this.storeIpfsInteractive = function(fileElement, urlStorageElement) {
 
         $('.submitNewUpdate').prop('disabled', true);
         let tmp = $('.submitNewUpdate:visible').html();
         $('.submitNewUpdate').html('Uploading Interactive File...');
 
-        let reader = new FileReader();
-        reader.onloadend = function () {
+        let name = $('#nftName').val();
+        let description = $('#nftDescription').val();
+        let imageUrl = $('#nftImageUrl').val();
+        let videoUrl = $('#nftVideoUrl').val();
+        let audioUrl = $('#nftAudioUrl').val();
+        let interactiveUrl = $('#nftInteractiveUrl').val();
+        let externalUrl = $('#nftExternalUrl').val();
+
+        var pdfURL = "";
+        let readerPDF = new FileReader();
+        let readerHTML = new FileReader();
+        readerPDF.onloadend = function() {
+
+            const buf = buffer.Buffer(reader.result);
+
+            ipfs.add(buf, (err, result) => {
+
+                console.log(err, result);
+
+                pdfURL = "https://gateway.ipfs.io/ipfs/" + result[0].hash;
+                readerHTML.readAsArrayBuffer(new Blob([this.createNFTBook(name, imageUrl, description, pdfURL, null)]));
+            });
+        };
+        readerHTML.onloadend = function() {
 
             const buf = buffer.Buffer(reader.result);
 
@@ -954,7 +991,7 @@ function TncDapp() {
                 let ipfsLink = "https://gateway.ipfs.io/ipfs/" + result[0].hash;
                 $(urlStorageElement).val(ipfsLink);
 
-                let tag = '<iframe style="width:100%;height:400px;" src=' + JSON.stringify(ipfsLink) + ' sandbox="allow-scripts allow-pointer-lock allow-popups allow-forms"></iframe>';
+                let tag = '<iframe style="width:100%;height:400px;" src=' + JSON.stringify(ipfsLink) + ' sandbox="allow-scripts allow-pointer-lock allow-popups allow-forms allow-fullscreen"></iframe>';
                 $('.interactiveFileDisplay').html(tag);
 
                 $('.submitNewUpdate').prop('disabled', false);
@@ -962,24 +999,26 @@ function TncDapp() {
             });
         };
 
+        //todo - save the image (or check if it's saved), save the pdf, then save the html blob
+        //reader.readAsArrayBuffer( new Blob([this.createNFTBook(params)])
         if (fileElement.files[0]) {
-            reader.readAsArrayBuffer(fileElement.files[0]);
+            readerPDF.readAsArrayBuffer(fileElement.files[0]);
         }
     };
 
-    this.pin = function(ipfsToken){
+    this.pin = function(ipfsToken) {
 
         $.getScript("https://ipfs2arweave.com/permapin/" + ipfsToken)
-        .done(function( script, textStatus ) {
-            console.log( "PINNED!" );
-            console.log( textStatus );
-        })
-        .fail(function( jqxhr, settings, exception ) {
-            console.log( jqxhr, settings, exception );
-        });
+            .done(function(script, textStatus) {
+                console.log("PINNED!");
+                console.log(textStatus);
+            })
+            .fail(function(jqxhr, settings, exception) {
+                console.log(jqxhr, settings, exception);
+            });
     }
 
-    this.addDeleteAttribute = function(index){
+    this.addDeleteAttribute = function(index) {
 
         $('#addedAttributeKey_' + index).remove();
         $('#addedAttributeValue_' + index).remove();
@@ -988,17 +1027,148 @@ function TncDapp() {
         $('#addedFormRow_' + index).remove();
     };
 
-    this.startBlockCounter = function(){
+    this.generateBookFromTemplate = function(options) {
+        /**
+         * Accepts an options object with properties:
+         * image
+         * title
+         * authorTwitter
+         * purchaseURL
+         * pdfURL
+         * 
+         * todo: add parameters for PDF Viewer
+         */
+        var downloadText = options.downloadEnable ? "" : "download";
+        var outputString = `
+        <!DOCTYPE html>
+    <html>
+    <head>
+      <base href="https://ipfs.io/ipfs/QmdpqLgSWdfFHExp4c9ARUtPxExxRrsoAT8Ume2RMjmgkQ/"/>
+      <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <meta name="robots" content="noindex,nofollow">
+      <title>${options.title}</title>
+      <meta name="viewport" content="width=device-width,initial-scale=1.0">
+      <link href="pflip/css/pdfflip.css" rel="stylesheet" type="text/css">
+    
+      <link href="favicon-32x32.png" rel="shortcut icon" type="image/x-icon"/>
+      <link href="android-chrome-192x192.png" rel="apple-touch-icon"/>
+    
+      <!-- Search Engine -->
+    <meta name="description" content="NFT Book">
+    <meta name="image" content="${options.image}">
+    <!-- Schema.org for Google -->
+    <meta itemprop="name" content="${options.title}">
+    <meta itemprop="description" content="NFT Book">
+    <meta itemprop="image" content="${options.image}">
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="${options.title}">
+    <meta name="twitter:description" content="NFT Book">
+    <meta name="twitter:site" content="${options.authorTwitter}">
+    <meta name="twitter:image:src" content="${options.image}">
+    <!-- Open Graph general (Facebook, Pinterest & Google+) -->
+    <meta name="og:title" content="Courier With Conviction">
+    <meta name="og:description" content="NFT Book">
+    <meta name="og:image" content="${options.image}">
+    <meta name="og:url" content="${options.purchaseURL}">
+    <meta name="og:site_name" content="${options.title}">
+    <meta name="og:type" content="website">
+    </head>
+    <body>
+    
+    <div class="PDFFlip" id="PDFF" source="${options.pdfURL}"></div>
+    
+    <script src="pflip/js/libs/jquery.min.js" type="text/javascript"></script>
+    <script src="pflip/js/pdfflip.js" type="text/javascript"></script>
+    <script type="text/javascript">
+    var option_PDFF = {
+    /* BASIC SETTINGS */  
+     openPage: 1,
+     height: '100%',
+     enableSound: false,
+     downloadEnable: ${options.downloadEnable}, 
+     direction: pdfflip.DIRECTION.LTR,
+     autoPlay: false,
+     autoPlayStart: false,
+     autoPlayDuration: 3000,
+     autoEnableOutline: false,
+     autoEnableThumbnail: false,
+    
+    /* TRANSLATE INTERFACE */  
+     text: {
+       toggleSound: "Sound",
+       toggleThumbnails: "Thumbnails",
+       toggleOutline: "Contents",
+       previousPage: "Previous Page",
+       nextPage: "Next Page",
+       toggleFullscreen: "Fullscreen",
+       zoomIn: "Zoom In",
+       zoomOut: "Zoom Out",
+       downloadPDFFile: "Download PDF",
+       gotoFirstPage: "First Page",
+       gotoLastPage: "Last Page",
+       play: "AutoPlay On",
+       pause: "AutoPlay Off",
+       share: "Share"
+     },
+    
+    /* ADVANCED SETTINGS */
+    /* pageMode: pdfflip.PAGE_MODE.AUTO */  
+     hard: "none",
+     overwritePDFOutline: false,
+     duration: 1000,
+     pageMode: pdfflip.SINGLE_PAGE_MODE.AUTO,
+     singlePageMode: pdfflip.SINGLE_PAGE_MODE.AUTO,
+    transparent: false,
+    scrollWheel: true,
+     zoomRatio: 1.5,
+    maxTextureSize: 1600,
+    backgroundImage: "pflip/background.jpg",
+     backgroundColor: "#fff",
+     controlsPosition: pdfflip.CONTROLSPOSITION.BOTTOM,
+     allControls: "pageMode,thumbnail,play,startPage,altPrev,pageNumber,altNext,endPage,zoomIn,zoomOut,fullScreen,download,sound,share",
+     hideControls: "sound${downloadText}",
+    };
+    
+    var pdfflipLocation = "./pflip/";
+    </script>
+    <!--script src="settings.js" type="text/javascript"></script-->
+    <!--script src="toc.js" type="text/javascript"></script-->
+    
+    </body>
+    </html>`;
+
+
+        return outputString;
+    }
+
+    this.createNFTBook = function(title, image, description, pdfUrl, params) {
+        //
+        var bookHTML = this.generateBookFromTemplate({
+            "name": title,
+            "image": image,
+            "title": title,
+            "purchaseURL": "https://nftbookbazaar.com",
+            "pdfURL": nftFilePath,
+            "download": false
+        });
+
+        return bookHTML;
+
+    }
+
+    this.startBlockCounter = function() {
 
         const _this2 = this;
 
         let startTime = new Date();
 
-        setInterval(async function(){
+        setInterval(async function() {
 
             const currBlock = await tncLib.getBlock();
 
-            if(parseInt(currBlock) !== parseInt(_this2.currentBlock)){
+            if (parseInt(currBlock) !== parseInt(_this2.currentBlock)) {
                 const endTime = new Date();
                 let timeDiff = endTime - startTime;
                 timeDiff /= 1000;
@@ -1011,7 +1181,7 @@ function TncDapp() {
             _timeDiff /= 1000;
             const _seconds = Math.round(_timeDiff);
 
-            if(_seconds > 60 * 5){
+            if (_seconds > 60 * 5) {
 
                 startTime = new Date(); // restart
 
@@ -1023,23 +1193,22 @@ function TncDapp() {
 
                         // Request account access if needed
 
-                        if(typeof ethereum.enable == 'function' && ethereum.enable){
+                        if (typeof ethereum.enable == 'function' && ethereum.enable) {
 
                             await ethereum.enable();
                         }
 
                         let accounts = [];
 
-                        if(ethereum && typeof ethereum.enable != 'undefined' && ethereum.enable){
+                        if (ethereum && typeof ethereum.enable != 'undefined' && ethereum.enable) {
                             accounts = await web3.eth.getAccounts();
                             console.log('account classic with ethereum');
-                        }
-                        else if(ethereum && ( typeof ethereum.enable == 'undefined' || !ethereum.enable ) ){
+                        } else if (ethereum && (typeof ethereum.enable == 'undefined' || !ethereum.enable)) {
                             accounts = await window.ethereum.request({
                                 method: 'eth_requestAccounts',
                             });
                             console.log('account new with ethereum');
-                        }else{
+                        } else {
                             accounts = await web3.eth.getAccounts();
                             console.log('account classic without ethereum');
                         }
@@ -1053,7 +1222,7 @@ function TncDapp() {
                 }
                 // Legacy dapp browsers...
                 else if (window.web3) {
-                    if(typeof  window.web3 == 'undefined' || !window.web3) {
+                    if (typeof window.web3 == 'undefined' || !window.web3) {
                         window.web3 = new Web3(web3.currentProvider);
                     }
                 }
@@ -1064,19 +1233,19 @@ function TncDapp() {
         }, 1000);
     };
 
-    this.accountChangeAlert = function(){
+    this.accountChangeAlert = function() {
         _alert('Account has been changed. Please <button class="btn btn-primary" onclick="location.reload()">click here</button> to reload this dapp.');
     };
 
-    this.chainChangeAlert = function(){
+    this.chainChangeAlert = function() {
         _alert('The network has been changed. Please <button class="btn btn-primary" onclick="location.reload()">click here</button> to reload this dapp.');
     };
 
-    this.startAccountCheck = function(){
+    this.startAccountCheck = function() {
 
-        if(window.ethereum){
+        if (window.ethereum) {
 
-            window.ethereum.on('accountsChanged', function(accounts){
+            window.ethereum.on('accountsChanged', function(accounts) {
                 const _that = _this;
                 if (accounts.length != _that.prevAccounts.length || accounts[0].toUpperCase() != _that.prevAccounts[0].toUpperCase()) {
                     _that.accountChangeAlert();
@@ -1084,12 +1253,12 @@ function TncDapp() {
                 }
             });
 
-        }else if(window.web3){
+        } else if (window.web3) {
 
-            setInterval( function() {
-                web3.eth.getAccounts(function(err, accounts){
+            setInterval(function() {
+                web3.eth.getAccounts(function(err, accounts) {
                     const _that = _this;
-                    if (accounts.length != 0 && ( accounts.length != _that.prevAccounts.length || accounts[0].toUpperCase() != _that.prevAccounts[0].toUpperCase())) {
+                    if (accounts.length != 0 && (accounts.length != _that.prevAccounts.length || accounts[0].toUpperCase() != _that.prevAccounts[0].toUpperCase())) {
                         _that.accountChangeAlert();
                         _that.prevAccounts = accounts;
                     }
@@ -1098,10 +1267,10 @@ function TncDapp() {
         }
     };
 
-    this.startChainCheck = function(){
+    this.startChainCheck = function() {
 
-        if(window.ethereum) {
-            window.ethereum.on('chainChanged', async function (chain) {
+        if (window.ethereum) {
+            window.ethereum.on('chainChanged', async function(chain) {
                 let actualChainId = chain.toString(16);
                 console.log('chain check: ', actualChainId + " != " + _this.prevChainId);
                 if (actualChainId != _this.prevChainId) {
@@ -1110,11 +1279,11 @@ function TncDapp() {
                 }
             });
 
-        }else if(window.web3){
+        } else if (window.web3) {
 
-            setInterval( async function() {
+            setInterval(async function() {
 
-                if(await web3.eth.net.getId() != _this.prevChainId){
+                if (await web3.eth.net.getId() != _this.prevChainId) {
                     _this.prevChainId = await web3.eth.net.getId();
                     _this.chainChangeAlert();
                 }
@@ -1123,22 +1292,22 @@ function TncDapp() {
         }
     };
 
-    $('#addAttributeButton').on('click', async function(){
+    $('#addAttributeButton').on('click', async function() {
 
         let keys = $('input[name="addedAttributesKeys[]"]');
-        for(let i = 0; i < keys.length; i++){
-            if($(keys[i]).val().trim() == $('#addAttributeKey').val().trim()){
+        for (let i = 0; i < keys.length; i++) {
+            if ($(keys[i]).val().trim() == $('#addAttributeKey').val().trim()) {
                 _alert("The trait exists already");
                 return;
             }
         }
 
-        if($('#addAttributeKey').val().trim() === ""){
+        if ($('#addAttributeKey').val().trim() === "") {
             _alert("Please enter a trait key");
             return;
         }
 
-        if($('#addAttributeValue').val().trim() === ""){
+        if ($('#addAttributeValue').val().trim() === "") {
             _alert("Please enter a trait value");
             return;
         }
@@ -1147,7 +1316,7 @@ function TncDapp() {
 
         let formRow = document.createElement("div");
         formRow.setAttribute('class', 'form-row');
-        formRow.setAttribute('id', 'addedFormRow_'+index);
+        formRow.setAttribute('id', 'addedFormRow_' + index);
         let col1 = document.createElement("div");
         col1.setAttribute('class', 'col');
         let col2 = document.createElement("div");
@@ -1166,7 +1335,7 @@ function TncDapp() {
         let newThing = document.createElement("input");
         newThing.setAttribute('type', 'text');
         newThing.setAttribute('name', 'addedAttributesKeys[]');
-        newThing.setAttribute('id', 'addedAttributeKey_'+index);
+        newThing.setAttribute('id', 'addedAttributeKey_' + index);
         newThing.setAttribute('class', 'form-control addedAttributeKey mt-3');
         newThing.setAttribute('autocomplete', 'off');
         newThing.setAttribute('value', $('#addAttributeKey').val().trim());
@@ -1175,7 +1344,7 @@ function TncDapp() {
         newThing = document.createElement("input");
         newThing.setAttribute('type', 'text');
         newThing.setAttribute('name', 'addedAttributesValues[]');
-        newThing.setAttribute('id', 'addedAttributeValue_'+index);
+        newThing.setAttribute('id', 'addedAttributeValue_' + index);
         newThing.setAttribute('class', 'form-control addedAttributeValue mt-3');
         newThing.setAttribute('autocomplete', 'off');
         newThing.setAttribute('value', $('#addAttributeValue').val().trim());
@@ -1190,21 +1359,21 @@ function TncDapp() {
             'date': 'Date'
         }
         let s = $('<select />');
-        for(let val in data) {
-            let opt = $('<option />', {value: val, text: data[val]});
+        for (let val in data) {
+            let opt = $('<option />', { value: val, text: data[val] });
             $(opt).prop('selected', val == $('#addDisplayType').val().trim() ? true : false);
             $(opt).appendTo(s);
         }
         $(s).attr('name', "addedAttributesDisplayTypes[]");
-        $(s).attr('id', 'addedAttributeDisplayType_'+index);
+        $(s).attr('id', 'addedAttributeDisplayType_' + index);
         $(s).attr('class', 'form-control mt-3');
         $(col3).append($(s).get(0));
 
         newThing = document.createElement("button");
-        newThing.setAttribute('id', 'addedAttributeDelete_'+index);
+        newThing.setAttribute('id', 'addedAttributeDelete_' + index);
         newThing.setAttribute('class', 'addedAttributeDelete btn btn-secondary ml-3 mt-3');
         $(newThing).text('delete');
-        $(newThing).on('click', function(){
+        $(newThing).on('click', function() {
             _this.addDeleteAttribute(parseInt(index));
         });
         $(col4).append(newThing);
@@ -1216,42 +1385,44 @@ function TncDapp() {
 
     });
 
-    document.getElementById('nftImageFile').onchange = function () {
+    document.getElementById('nftImageFile').onchange = function() {
 
-        _this.storeIpfsImage( document.getElementById('nftImageFile'), document.getElementById('nftImageUrl') );
+        _this.storeIpfsImage(document.getElementById('nftImageFile'), document.getElementById('nftImageUrl'));
     };
 
-    document.getElementById('nftAudioFile').onchange = function () {
+    document.getElementById('nftAudioFile').onchange = function() {
 
-        _this.storeIpfsAudio( document.getElementById('nftAudioFile'), document.getElementById('nftAudioUrl') );
+        _this.storeIpfsAudio(document.getElementById('nftAudioFile'), document.getElementById('nftAudioUrl'));
     };
 
-    document.getElementById('nftVideoFile').onchange = function () {
+    document.getElementById('nftVideoFile').onchange = function() {
 
-        _this.storeIpfsVideo( document.getElementById('nftVideoFile'), document.getElementById('nftVideoUrl') );
+        _this.storeIpfsVideo(document.getElementById('nftVideoFile'), document.getElementById('nftVideoUrl'));
     };
 
-    document.getElementById('nftInteractiveFile').onchange = function () {
+    document.getElementById('nftInteractiveFile').onchange = function() {
 
-        _this.storeIpfsInteractive( document.getElementById('nftInteractiveFile'), document.getElementById('nftInteractiveUrl') );
+        //_this.storeIpfsInteractive(document.getElementById('nftInteractiveFile'), document.getElementById('nftInteractiveUrl'));
+        //upload PDF to IPFS - create HTML file from template
+        _this.storeIpfsInteractive()
     };
 
     /**
      * loading erc1155 imagefile, ready to get posted
      */
-    document.getElementById('erc1155ImageFile').onchange = function () {
+    document.getElementById('erc1155ImageFile').onchange = function() {
 
-        _this.storeIpfsImage( document.getElementById('erc1155ImageFile'), document.getElementById('erc1155ImageUrl') );
+        _this.storeIpfsImage(document.getElementById('erc1155ImageFile'), document.getElementById('erc1155ImageUrl'));
     };
 
-    $('#nftSubmit').on('click', async function(){
+    $('#nftSubmit').on('click', async function() {
 
         if ($(this).hasClass("disabled")) {
             console.log("Please wait for transaction to complete")
-          return;
+            return;
         }
 
-        if(
+        if (
             (
                 $('#nftIsEdit').val() == '0' && parseInt($('#nftSupply').val().trim()) < 0
             ) ||
@@ -1259,19 +1430,19 @@ function TncDapp() {
                 $('#nftIsEdit').val() == '0' && parseInt($('#nftMaxSupply').val().trim()) <= 0
             ) ||
             $('#nftName').val().trim() == ''
-        ){
+        ) {
             _alert('Please enter all required fields.');
             return;
         }
 
-        if($('#nftIsEdit').val() == '0' && ( isNaN(parseInt($('#nftSupply').val().trim())) ||
-             isNaN(parseInt($('#nftMaxSupply').val().trim()))) ){
+        if ($('#nftIsEdit').val() == '0' && (isNaN(parseInt($('#nftSupply').val().trim())) ||
+                isNaN(parseInt($('#nftMaxSupply').val().trim())))) {
             _alert('Supply and Max. Supply must be numeric.');
             return;
         }
 
-        if($('#nftIsEdit').val() == '0' &&
-            ( parseInt($('#nftSupply').val().trim()) < 0 || parseInt($('#nftMaxSupply').val().trim()) < parseInt($('#nftSupply').val().trim()))){
+        if ($('#nftIsEdit').val() == '0' &&
+            (parseInt($('#nftSupply').val().trim()) < 0 || parseInt($('#nftMaxSupply').val().trim()) < parseInt($('#nftSupply').val().trim()))) {
             _alert('Supply and Max. Supply must be larger or equal to zero and Max. Supply must equal or larger than Supply.');
             return;
         }
@@ -1288,28 +1459,28 @@ function TncDapp() {
         let keys = $('input[name="addedAttributesKeys[]"]');
         let values = $('input[name="addedAttributesValues[]"]');
         let types = $('select[name="addedAttributesDisplayTypes[]"]');
-        for(let i = 0; i < keys.length; i++){
-            if($(types[i]).val().trim() != 'text') {
-                attributes.push({trait_type: $(keys[i]).val().trim(), value: $(values[i]).val().trim(), display_type: $(types[i]).val().trim()});
-            }else{
-                attributes.push({trait_type: $(keys[i]).val().trim(), value: $(values[i]).val().trim()});
+        for (let i = 0; i < keys.length; i++) {
+            if ($(types[i]).val().trim() != 'text') {
+                attributes.push({ trait_type: $(keys[i]).val().trim(), value: $(values[i]).val().trim(), display_type: $(types[i]).val().trim() });
+            } else {
+                attributes.push({ trait_type: $(keys[i]).val().trim(), value: $(values[i]).val().trim() });
             }
         }
 
         let nftInfo = {
-            name : name,
-            description : description,
-            image : imageUrl,
-            animation_url : videoUrl,
-            audio_url : audioUrl,
-            interactive_url : interactiveUrl,
-            external_link : externalUrl,
+            name: name,
+            description: description,
+            image: imageUrl,
+            animation_url: videoUrl,
+            audio_url: audioUrl,
+            interactive_url: interactiveUrl,
+            external_link: externalUrl,
             attributes: attributes
         };
 
         console.log(JSON.stringify(nftInfo));
 
-        ipfs.add(buffer.Buffer(JSON.stringify(nftInfo)), async (err, result) => {
+        ipfs.add(buffer.Buffer(JSON.stringify(nftInfo)), async(err, result) => {
 
             console.log(err, result);
 
@@ -1317,7 +1488,7 @@ function TncDapp() {
 
             let nftJsonUrl = "https://gateway.ipfs.io/ipfs/" + result[0].hash;
 
-            if($('#nftIsEdit').val() == '0'){
+            if ($('#nftIsEdit').val() == '0') {
 
                 toastr.remove();
 
@@ -1326,22 +1497,22 @@ function TncDapp() {
                     $('#nftMaxSupply').val().trim(),
                     nftJsonUrl,
                     $('#nftErc1155Address').val(),
-                    function (){
+                    function() {
                         toastr["info"]('Please wait for the transaction to finish.', "Creating new NFT....");
                         console.log("Creating new nft here")
                         $("#nftSubmit").addClass("disabled");
                         $('#nftSubmit').html('Creating NFT');
 
                     },
-                    function(receipt){
+                    function(receipt) {
                         console.log(receipt);
                         toastr.remove();
                         toastr["success"]('Transaction has been finished.', "Success");
                         $("#nftSubmit").removeClass("disabled");
-                        
+
                         _this.loadPage('');
                     },
-                    function(err){
+                    function(err) {
                         toastr.remove();
                         let errMsg = 'An error occurred with your new NFT transaction.';
                         toastr["error"](errMsg, "Error");
@@ -1350,30 +1521,28 @@ function TncDapp() {
                         $('#nftSubmit').html('Fail');
 
                     });
-            }
-            else
-            {
+            } else {
                 toastr.remove();
 
                 await window.tncLib.updateUri(
                     $('#nftIsEdit').val(),
                     nftJsonUrl,
                     $('#nftErc1155Address').val(),
-                    function (){
-                        toastr["info"]('Please wait for the transaction to finish.', "Updating NFT....");                        
+                    function() {
+                        toastr["info"]('Please wait for the transaction to finish.', "Updating NFT....");
                         $("#nftSubmit").addClass("disabled");
                         $('#nftSubmit').html('Updating NFT');
                     },
-                    function(receipt){
+                    function(receipt) {
                         console.log(receipt);
                         toastr.remove();
                         toastr["success"]('Transaction has been finished.', "Success");
                         $("#nftSubmit").removeClass("disabled");
 
                     },
-                    function(err){
+                    function(err) {
                         toastr.remove();
-                        let errMsg = 'An error occurred with your NFT Update transaction.';                    
+                        let errMsg = 'An error occurred with your NFT Update transaction.';
                         toastr["error"](errMsg, "Error");
                         errorPopup("Error", errMsg, err.stack);
                         $("#nftSubmit").removeClass("disabled");
@@ -1383,19 +1552,19 @@ function TncDapp() {
         });
     });
 
-    $('#erc1155Submit').on('click', async function(){
+    $('#erc1155Submit').on('click', async function() {
 
         if ($(this).hasClass("disabled")) {
             console.log("Please wait for transaction to complete")
-          return;
+            return;
         }
 
-        if(
+        if (
             (
                 $('#collectionIsEdit').val() == '0' && $('#erc1155Ticker').val().trim() == ''
             ) ||
             $('#erc1155Name').val().trim() == ''
-        ){
+        ) {
             _alert('Please enter all required fields.');
             return;
         }
@@ -1407,13 +1576,13 @@ function TncDapp() {
         let externalUrl = $('#erc1155ExternalUrl').val();
 
         let contractInfo = {
-            name : name,
-            description : description,
-            image : imageUrl,
-            external_link : externalUrl
+            name: name,
+            description: description,
+            image: imageUrl,
+            external_link: externalUrl
         };
 
-        ipfs.add(buffer.Buffer(JSON.stringify(contractInfo)), async (err, result) => {
+        ipfs.add(buffer.Buffer(JSON.stringify(contractInfo)), async(err, result) => {
 
             console.log(err, result);
 
@@ -1425,24 +1594,24 @@ function TncDapp() {
 
             toastr.remove();
 
-            if($('#collectionIsEdit').val() == '0'){
+            if ($('#collectionIsEdit').val() == '0') {
 
                 await window.tncLib.newErc1155(
                     name,
                     ticker,
                     contractJsonUrl,
                     proxyRegistryAddress,
-                    function (){
-                        try{
+                    function() {
+                        try {
                             toastr["info"]("Please wait for the transaction to finish.", "Creating new Collection....");
                             $("#erc1155Submit").addClass("disabled");
                             $("#erc1155Submit").html("Creating collection");
-                        }catch(e){
+                        } catch (e) {
                             console.log(e);
                         }
                     },
-                    function(receipt){
-                        try{
+                    function(receipt) {
+                        try {
                             console.log(receipt);
                             toastr.remove();
                             toastr["success"]('Transaction has been finished.', "Success");
@@ -1450,61 +1619,60 @@ function TncDapp() {
                             $("#erc1155Submit").html("Create");
 
                             _this.populateMyErc1155s();
-                        }catch(e){
+                        } catch (e) {
                             console.log(e);
                         }
                     },
-                    function(err){
-                        try{
+                    function(err) {
+                        try {
                             toastr.remove();
-                            let errMsg = 'An error occurred with your new Collection transaction. Do you have sufficient funds?';                    
+                            let errMsg = 'An error occurred with your new Collection transaction. Do you have sufficient funds?';
                             toastr["error"](errMsg, "Error");
                             errorPopup("Error", errMsg, err.stack);
                             $("#erc1155Submit").removeClass("disabled");
                             $("#erc1155Submit").html("Create");
-                        }catch(e){
+                        } catch (e) {
                             console.log(e);
                         }
                     }
                 );
-            }
-            else{
+            } else {
 
                 toastr.remove();
 
                 await window.tncLib.setContractURI(
                     $('#collectionIsEdit').val(),
                     contractJsonUrl,
-                    function (){
-                        try{
+                    function() {
+                        try {
                             toastr["info"]("Please wait for the transaction to finish.", "Updating Collection....");
                             $("#erc1155Submit").addClass("disabled");
                             $("#erc1155Submit").html("Updating collection");
-                        }catch(e){
+                        } catch (e) {
                             console.log(e);
                         }
                     },
-                    function(receipt){
-                        try{
+                    function(receipt) {
+                        try {
                             console.log(receipt);
                             toastr.remove();
                             toastr["success"]('Transaction has been finished.', "Success");
                             $("#erc1155Submit").removeClass("disabled");
                             $("#erc1155Submit").html("Create");
                             _this.populateMyErc1155s();
-                        }catch(e){
+                        } catch (e) {
                             console.log(e);
                         }
                     },
-                    function(err){
-                        try{
+                    function(err) {
+                        try {
                             toastr.remove();
-                            let errMsg = 'An error occurred with your updated Collection transaction.';                    
+                            let errMsg = 'An error occurred with your updated Collection transaction.';
                             toastr["error"](errMsg, "Error");
                             errorPopup("Error", errMsg, err.stack);
                             $("#erc1155Submit").removeClass("disabled");
                             $("#erc1155Submit").html("Create");
-                        }catch(e){
+                        } catch (e) {
                             console.log(e);
                         }
                     }
@@ -1513,13 +1681,13 @@ function TncDapp() {
         });
     });
 
-    $(document).ready(async function(){
+    $(document).ready(async function() {
 
-        $('#myPoolsButton').on('click', function(){
+        $('#myPoolsButton').on('click', function() {
             _this.loadPage('myPools');
         });
 
-        await web3.eth.subscribe("newBlockHeaders", async (error, event) => {
+        await web3.eth.subscribe("newBlockHeaders", async(error, event) => {
             if (!error) {
                 return;
             }
@@ -1552,16 +1720,15 @@ function run(connected) {
 
         let accounts = [];
 
-        if(typeof ethereum != 'undefined' && ethereum && typeof ethereum.enable != 'undefined' && ethereum.enable){
+        if (typeof ethereum != 'undefined' && ethereum && typeof ethereum.enable != 'undefined' && ethereum.enable) {
             accounts = await web3.eth.getAccounts();
             console.log('account classic with ethereum');
-        }
-        else if(typeof ethereum != 'undefined' && ethereum && ( typeof ethereum.enable == 'undefined' || !ethereum.enable ) ){
+        } else if (typeof ethereum != 'undefined' && ethereum && (typeof ethereum.enable == 'undefined' || !ethereum.enable)) {
             accounts = await window.ethereum.request({
                 method: 'eth_requestAccounts',
             });
             console.log('account new with ethereum');
-        }else{
+        } else {
             accounts = await web3.eth.getAccounts();
             console.log('account classic without ethereum');
         }
@@ -1572,7 +1739,7 @@ function run(connected) {
         window.tncLibMarket = new TncLibMarket();
         tncLibMarket.account = tncLib.account;
 
-        if(typeof accounts == 'undefined' || accounts.length == 0){
+        if (typeof accounts == 'undefined' || accounts.length == 0) {
 
             tncLib.account = '0x0000000000000000000000000000000000000000';
             tncLibMarket.account = '0x0000000000000000000000000000000000000000';
@@ -1581,19 +1748,18 @@ function run(connected) {
         let dapp = new TncDapp();
         window.tncDapp = dapp;
         dapp.prevAccounts = accounts;
-        if(window.ethereum){
+        if (window.ethereum) {
             let chain = await web3.eth.getChainId();
             let actualChainId = chain.toString(16);
             dapp.prevChainId = actualChainId;
-        }
-        else if(window.web3){
+        } else if (window.web3) {
             dapp.prevChainId = await web3.eth.net.getId();
         }
-        if(window.torus){
+        if (window.torus) {
             $('#torusAddress').css('display', 'inline-block')
             $('#torusAddressPopover').data('content', tncLib.account);
             $('#torusAddressPopover').popover();
-            $('#torusAddressPopover').on('click', function(){
+            $('#torusAddressPopover').on('click', function() {
                 let input = document.createElement("textarea");
                 input.value = tncLib.account;
                 document.body.appendChild(input);

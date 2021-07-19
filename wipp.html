@@ -293,7 +293,7 @@
 
             <!-- HEADER -->
             <div class="custom-header">
-                <div class="custom-header__title">SphericalArt Indefatigable</div>
+                <div class="custom-header__title">WIP Publishing</div>
                 <div class="custom-header__dropdowns">
 
                     <div class="dropdown ml-3 mr-3 dropdown--chains">
@@ -335,19 +335,13 @@
                 </p>
             </div>
 
-            <h1>Collections</h1>
-
-            <p>
-                Info -> A collection is like a book - the cover, and structure. Inside a book, you have chapters, and pages. Similarly, inside a collection, you have NFT IDs (chapters), and individual NFT tokens (pages). Basically, a collection is a cover for your NFTs.
-            </p>
-
-            <div class="add-new-card-container" data-toggle="modal" data-target="#nftContractModal" id="nftNewCollectionModalButton">
+            <div class="add-new-card-container" style="display: inline-block;" data-toggle="modal" data-target="#nftContractModal" id="nftNewCollectionModalButton">
                 <span class="material-icons">
           add_circle
         </span> Add new collection
             </div>
 
-            <div class="add-new-card-container" data-toggle="modal" data-target="#nftTransferMultiBatchModal" id="nftTransferMultiBatchModalButton">
+            <div class="add-new-card-container" style="display: inline-block;" data-toggle="modal" data-target="#nftTransferMultiBatchModal" id="nftTransferMultiBatchModalButton">
                 <span class="material-icons">
             add_circle
             </span> Multi Batch Transfer
@@ -360,7 +354,7 @@
                     <div class="nftListing mb-3">
                         <div class="card card-profile">
                             {{#ifNotEquals image ""}}
-                            <img class="card-avatar" src="{{image}}" alt="{{name}}" /> {{/ifNotEquals}}
+                            <a href="javascript:void(0)" class="btn manageNftsButton manageNftsButton{{index}}" data-contract-name="{{name}}" data-contract-address="{{erc1155}}"><img class="card-avatar" src="{{image}}" alt="{{name}}" /></a> {{/ifNotEquals}}
                             <div class="card-body">
                                 <div class="mt-5">
                                     <p class="text-truncate">
@@ -416,6 +410,7 @@
                     </div>
                 </script>
 
+                <button id="new-nft" class="btn btn-outline" data-toggle="modal" style="font-size: initial; display: none;" data-target="#nftNewModal" data-contract-address="{{erc1155}}">New NFT</a>
                 <button id="view-collections" class="btn btn-outline" style="font-size: initial; display: none;"> View collections </button>
                 <div class="row" id="myPoolsPage" style="display: none;"></div>
 
@@ -499,9 +494,26 @@
 
             </div>
 
-            <div class="row" id="myNftsPage" style="display: none;"></div>
+            <div class="row" id="myNftsPage" style="display: block;"></div>
 
             <!-- MODALS BEGIN -->
+
+            <!-- View interactive modal -->
+            <div class="modal" id="nftInteractiveView" tabindex="-1" aria-labelledby="nftInteractiveViewLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="nftInteractiveModalLabel">Interactive NFT View</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body modal-content">
+                            <!-- todo flesh this out with an iframe and such -->
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Transfer Modal -->
             <div class="modal fade" style="overflow-y: scroll;" id="nftTransferModal" tabindex="-1" aria-labelledby="nftTransferModalLabel" aria-hidden="true">
@@ -704,30 +716,30 @@
                                     <textarea class="form-control" id="nftDescription" rows="3"></textarea>
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="nftImageFile">Click to Choose Image...</label>
+                                <div class="form-group" style="display: inline-block">
+                                    <label for="nftImageFile">[Upload Image]</label>
                                     <input type="file" class="form-control-file" id="nftImageFile" accept="image/*">
                                     <div class="imageFileDisplay mt-3"></div>
                                     <input type="hidden" id="nftImageUrl" value="" />
                                 </div>
 
 
-                                <div class="form-group">
-                                    <label for="nftVideoFile">Click to Choose Video...</label>
+                                <div class="form-group" style="display: inline-block">
+                                    <label for="nftVideoFile">[Upload Video]</label>
                                     <input type="file" class="form-control-file" id="nftVideoFile" accept="video/mp4,video/webm">
                                     <div class="videoFileDisplay mt-3"></div>
                                     <input type="hidden" id="nftVideoUrl" value="" />
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="nftAudioFile">Click to Choose Audio...</label>
+                                <div class="form-group" style="display: inline-block">
+                                    <label for="nftAudioFile">[Upload Audio]</label>
                                     <input type="file" class="form-control-file" id="nftAudioFile" accept="audio/mp3,audio/webm">
                                     <div class="audioFileDisplay mt-3"></div>
                                     <input type="hidden" id="nftAudioUrl" value="" />
                                 </div>
 
-                                <div class="form-group">
-                                    <label for="nftInteractiveFile">Click to Choose Interactive File...(name must be index.html)</label>
+                                <div class="form-group" style="display: inline-block">
+                                    <label for="nftInteractiveFile">[Upload PDF]</label>
                                     <input type="file" class="form-control-file" id="nftInteractiveFile" accept="text/html">
                                     <div class="interactiveFileDisplay mt-3"></div>
                                     <input type="hidden" id="nftInteractiveUrl" value="" />
@@ -735,25 +747,23 @@
 
 
                                 <div class="form-group">
-                                    <label for="nftExternalUrl">External URL</label>
+                                    <label for="nftExternalUrl">PDF URL</label>
                                     <input type="text" placeholder="Url should point to your NFT page" class="form-control" id="nftExternalUrl">
                                 </div>
 
                                 <fieldset>
                                     <legend>Traits</legend>
-                                    <div class="form-group">
-                                        <label for="addAttributeKey">Key</label>
-                                        <input class="form-control" placeholder="Add a trait key" type="text" id="addAttributeKey" value="" autocomplete="off" />
-                                        <label for="addAttributeValue">Value</label>
-                                        <input class="form-control" placeholder="Add a trait value" type="text" id="addAttributeValue" value="" autocomplete="off" />
-                                        <label for="addDisplayType">Type</label>
-                                        <select id="addDisplayType" class="form-control">
-                        <option value="text">Text</option>
-                        <option value="number">Number</option>
-                        <option value="boost_number">Boost Number</option>
-                        <option value="boost_percentage">Boost Percentage</option>
-                        <option value="date">Date</option>
-                      </select>
+                                    <div class="form-group form-row">
+                                        <div class="col"><input class="form-control" style="display:inline-block;" placeholder="Add a trait key" type="text" id="addAttributeKey" value="" autocomplete="off" /></div>
+                                        <div class="col"><input class="form-control" style="display:inline-block;" placeholder="Add a trait value" type="text" id="addAttributeValue" value="" autocomplete="off" /></div>
+                                        <div class="col"><select id="addDisplayType" class="form-control" style="display:inline-block;">
+                                            <option value="text">Text</option>
+                                            <option value="number">Number</option>
+                                            <option value="boost_number">Boost Number</option>
+                                            <option value="boost_percentage">Boost Percentage</option>
+                                            <option value="date">Date</option>
+                                        </select>
+                                        </div>
                                         <button id="addAttributeButton" class="btn btn-secondary mt-3">Add</button>
                                         <div id="addedAttributes"></div>
                                     </div>
@@ -890,7 +900,7 @@
 
     </div>
 
-    <!-- FOOTER -->
+    <!-- FOOTER
     <div class="footer">
         <ul>
             <li class="nav-item">
@@ -969,7 +979,7 @@
         </ul>
 
     </div>
-    <!-- FOOTER END -->
+     FOOTER END -->
 
     </div>
     <script src="js/ramp-init.js"></script>

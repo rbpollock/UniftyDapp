@@ -10,5 +10,5 @@
     "email": "",
     "phone": "",
     "telegram": "",
-    "customLink": { "name": "Max. 50 NIF-LP per wallet! Howto: Farm and NIF-LP (PDF)", "value": "https://127.0.0.1:8080/farmhowto.pdf" }
+    "customLink": { "name": "Max. 50 NIF-LP per wallet! Howto: Farm and NIF-LP (PDF)", "value": "http://127.0.0.1:8080/farmhowto.pdf" }
 }

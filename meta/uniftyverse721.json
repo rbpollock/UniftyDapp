@@ -1,5 +1,5 @@
 {
-    "external_url": "https://127.0.0.1:8080/",
-    "image": "https://127.0.0.1:8080/assets/img/wipp.png",
+    "external_url": "http://127.0.0.1:8080/",
+    "image": "http://127.0.0.1:8080/assets/img/wipp.png",
     "description": "This is the Uniftyverse 721 collection and contains all EIP-721 to EIP-1155 converted tokens."
 }

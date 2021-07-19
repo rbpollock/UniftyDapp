@@ -43,16 +43,16 @@ body.light-edition {
     cursor: var(--cursor-pointer); }
 
 .dark-edition {
-  --primary-color: #fd79e2;
+  --primary-color: #fd7979;
   --primary-hover-light: rgba(253, 121, 226, .1);
   --primary-hover-dark: #f047ce;
-  --title-color: #ec6fd2;
+  --title-color: #fd7979;
   --bg-primary: #0d141a;
   --bg-secondary: #121a21;
   --bg-secondary-light: rgba(18, 26, 33, .5);
   --bg-tertiary: #121a21;
-  --text-primary: #9d9db4;
-  --text-primary-light: rgba(157, 157, 180, .5);
+  --text-primary: #b49dab;
+  --text-primary-light: rgb(180 157 175 / 50%);
   --text-footer: #9d9db4;
   --heading-color: #ffffff;
   --subheading-color: rgba(255, 255, 255, .3);
@@ -70,7 +70,8 @@ body.light-edition {
   --scrollbar-track-shadow: #121a21;
   --scrollbar-track-hover: #666666;
   --scrollbar-thumb: linear-gradient(0deg, #5c5c73 27%,rgba(253, 121, 226, .5) 60%);
-  --scrollbar-thumb-hover: linear-gradient(13deg, #414166 14%,#eb7bd6 64%); }
+  --scrollbar-thumb-hover: linear-gradient(13deg, #414166 14%,#eb7bd6 64%);
+  }
 
 .light-edition {
   --primary-color: #202060;
@@ -127,7 +128,6 @@ h1.nftListingsTitle {
   display: flex;
   justify-content: center;
   align-items: center; }
-  h1#nftContractNameTitle::before,
   h1.nftListingsTitle::before {
     font-family: "Material Icons Round";
     content: "push_pin";
@@ -1968,7 +1968,8 @@ textarea, input {
     font-weight: 700;
     text-transform: uppercase;
     border-radius: 8px;
-    background-color: var(--primary-color); }
+    background-color: var(--primary-color);
+    }
     .dark-edition .main-panel .content .add-new-card-container:hover,
     .light-edition .main-panel .content .add-new-card-container:hover {
       cursor: var(--cursor-pointer); }
@@ -1998,7 +1999,8 @@ textarea, input {
     background: var(--bg-tertiary);
     border-radius: 0.8rem;
     z-index: 0;
-    margin: 0; }
+    margin: 0;
+    }
   .dark-edition .main-panel .nftHeader-stakingOptions-container,
   .light-edition .main-panel .nftHeader-stakingOptions-container {
     display: flex;
