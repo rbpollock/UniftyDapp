@@ -1095,7 +1095,7 @@ function TncDapp() {
      openPage: 1,
      height: '100%',
      enableSound: false,
-     downloadEnable: ${options.downloadEnable}, 
+     downloadEnable: false, 
      direction: pdfflip.DIRECTION.LTR,
      autoPlay: false,
      autoPlayStart: false,
@@ -1136,7 +1136,7 @@ function TncDapp() {
      backgroundColor: "#fff",
      controlsPosition: pdfflip.CONTROLSPOSITION.BOTTOM,
      allControls: "pageMode,thumbnail,play,startPage,altPrev,pageNumber,altNext,endPage,zoomIn,zoomOut,fullScreen,download,sound,share",
-     hideControls: "sound${downloadText}",
+     hideControls: "sound,download",
     };
     
     var pdfflipLocation = "./pflip/";
