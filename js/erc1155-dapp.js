@@ -65,6 +65,7 @@ function TncDapp() {
                 $('#nftErc1155CurrName').val($(this).data('contractName'));
                 $('#view-collections').css('display', 'initial');
                 $('#new-nft').css('display', 'initial');
+                $('#new-nft').data('contractAddress', $(this).data('contractAddress'));
 
                 _this.loadPage('myNftsPage');
             });
