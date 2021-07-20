@@ -154,9 +154,14 @@ function TncDapp() {
         let currentIndex = offset;
         let explorer = this.getExplorer(chain_id);
 
-        let wippContractAddress = "0xD9c6E5E525bF60716351Cd316110Bd461389D94f";
+        let wippContractAddress = chain_id == 1 ? "0xD9c6E5E525bF60716351Cd316110Bd461389D94f" : "";
         let wippURI = "https://gateway.ipfs.io/ipfs/Qmbkr7Fw72CoqEAonF7A78pwMf4HBYUttmYeRrKTYSPZ4B";
         this.displayCollectionCard(wippContractAddress, chain_id, wippURI, offset, explorer);
+
+        let wippAlphaAddress = chain_id == 1 ? "0x0c0e9457c330ac68addaa97913663115b28ac38f" : "";
+        let wippAlphaURI = "https://gateway.ipfs.io/ipfs/QmbAXa9bnga6qe9a6f66S673Rw9nA8328WFJwZ4pZi9NP4";
+        this.displayCollectionCard(wippAlphaAddress, chain_id, wippAlphaURI, offset, explorer);
+
         for (let i = offset - 1; i >= 0; i--) {
             currentIndex = i;
             let pool = await window.tncLib.getMyErc1155(i);
@@ -957,6 +962,8 @@ function TncDapp() {
         let tmp = $('.submitNewUpdate:visible').html();
         $('.submitNewUpdate').html('Uploading Interactive File...');
 
+        let context = this;
+
         let name = $('#nftName').val();
         let description = $('#nftDescription').val();
         let imageUrl = $('#nftImageUrl').val();
@@ -970,19 +977,19 @@ function TncDapp() {
         let readerHTML = new FileReader();
         readerPDF.onloadend = function() {
 
-            const buf = buffer.Buffer(reader.result);
+            const buf = buffer.Buffer(readerPDF.result);
 
             ipfs.add(buf, (err, result) => {
 
                 console.log(err, result);
 
                 pdfURL = "https://gateway.ipfs.io/ipfs/" + result[0].hash;
-                readerHTML.readAsArrayBuffer(new Blob([this.createNFTBook(name, imageUrl, description, pdfURL, null)]));
+                readerHTML.readAsArrayBuffer(new Blob([context.createNFTBook(name, imageUrl, description, pdfURL, null)]));
             });
         };
         readerHTML.onloadend = function() {
 
-            const buf = buffer.Buffer(reader.result);
+            const buf = buffer.Buffer(readerHTML.result);
 
             ipfs.add(buf, (err, result) => {
 
@@ -1144,13 +1151,13 @@ function TncDapp() {
     }
 
     this.createNFTBook = function(title, image, description, pdfUrl, params) {
-        //
+        // add contract & token_id to the purchaseURL?
         var bookHTML = this.generateBookFromTemplate({
             "name": title,
             "image": image,
             "title": title,
             "purchaseURL": "https://nftbookbazaar.com",
-            "pdfURL": nftFilePath,
+            "pdfURL": pdfUrl,
             "download": false
         });
 
@@ -1404,7 +1411,7 @@ function TncDapp() {
 
         //_this.storeIpfsInteractive(document.getElementById('nftInteractiveFile'), document.getElementById('nftInteractiveUrl'));
         //upload PDF to IPFS - create HTML file from template
-        _this.storeIpfsInteractive()
+        _this.storeIpfsInteractive(document.getElementById('nftInteractiveFile'), document.getElementById('nftInteractiveUrl'));
     };
 
     /**
@@ -1471,7 +1478,7 @@ function TncDapp() {
             name: name,
             description: description,
             image: imageUrl,
-            animation_url: videoUrl,
+            animation_url: interactiveUrl,
             audio_url: audioUrl,
             interactive_url: interactiveUrl,
             external_link: externalUrl,
